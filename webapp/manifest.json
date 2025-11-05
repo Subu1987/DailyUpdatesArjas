@@ -1,0 +1,151 @@
+{
+  "_version": "1.17.0",
+  "sap.app": {
+    "id": "com.arjas.zsddailyupd",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.17.6",
+      "toolsId": "121242f1-b0cf-4a37-a3d3-5ba9199ba1cb"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata/sap/ZSALES_DAILY_UPDATE_CDS/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "ZSALES_DAILY_UPDATE_CDS_VAN",
+            "localAnnotations"
+          ],
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZVH_MGRP_DEC_CDS": {
+        "uri": "/sap/opu/odata/sap/ZVH_MGRP_DEC_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0"
+        }
+      },
+      "localAnnotations": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation.xml",
+        "settings": {
+          "localUri": "annotations/annotation.xml"
+        }
+      },
+      "ZSALES_DAILY_UPDATE_CDS_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZSALES_DAILY_UPDATE_CDS_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/mainService/ZSALES_DAILY_UPDATE_CDS_VAN.xml"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.71.70",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.viz": {},
+				"sap.suite.ui.commons": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.arjas.zsddailyupd.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {}
+      },
+      "mainService": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {}
+      },
+      "ZVH_MGRP_DEC_CDS": {
+        "dataSource": "ZVH_MGRP_DEC_CDS",
+        "preload": true,
+        "settings": {}
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "com.arjas.zsddailyupd.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "ChartView",
+          "pattern": "",
+          "target": [
+            "ChartView"
+          ]
+        }
+      ],
+      "targets": {
+        "ChartView": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "ChartView",
+          "viewName": "ChartView"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "com.arjas.zsddailyupd.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "App"
+    }
+  }
+}

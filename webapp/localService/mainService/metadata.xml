@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='BW_BID')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+    </edmx:Reference>
+    <edmx:DataServices m:DataServiceVersion="2.0">
+        <Schema Namespace="ZSALES_DAILY_UPDATE_CDS" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+            <EntityType Name="Zsales_Daily_UpdateType" sap:semantics="aggregate" sap:label="Daily Update Report" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="ID"/>
+                </Key>
+                <Property Name="ID" Type="Edm.String" Nullable="false"/>
+                <Property Name="doc_number" Type="Edm.String" MaxLength="10" sap:aggregation-role="dimension" sap:display-format="UpperCase" sap:label="Sales document"/>
+                <Property Name="plant" Type="Edm.String" MaxLength="4" sap:aggregation-role="dimension" sap:display-format="UpperCase" sap:label="Plant"/>
+                <Property Name="doc_type" Type="Edm.String" MaxLength="4" sap:aggregation-role="dimension" sap:display-format="UpperCase" sap:label="Sales doc. type"/>
+                <Property Name="CALDAY" Type="Edm.String" MaxLength="8" sap:aggregation-role="dimension" sap:display-format="UpperCase"/>
+                <Property Name="CALMONTH" Type="Edm.String" MaxLength="6" sap:aggregation-role="dimension" sap:display-format="UpperCase"/>
+                <Property Name="matl_group" Type="Edm.String" MaxLength="9" sap:aggregation-role="dimension" sap:display-format="UpperCase" sap:text="MatlGroupDesc" sap:label="Material group"/>
+                <Property Name="MatlGroupDesc" Type="Edm.String" MaxLength="20" sap:aggregation-role="dimension" sap:label="Short description"/>
+                <Property Name="INV_QTY" Type="Edm.Decimal" Precision="17" Scale="3" sap:aggregation-role="measure" sap:unit="SALES_UNIT" sap:label="Billing Quantity SU" sap:filterable="false"/>
+                <Property Name="SALES_UNIT" Type="Edm.String" MaxLength="3" sap:aggregation-role="dimension" sap:label="Sales unit" sap:semantics="unit-of-measure"/>
+                <NavigationProperty Name="to_MGRPDESC" Relationship="ZSALES_DAILY_UPDATE_CDS.assoc_A1C083E6802FCE08966301709F63AD5F" FromRole="FromRole_assoc_A1C083E6802FCE08966301709F63AD5F" ToRole="ToRole_assoc_A1C083E6802FCE08966301709F63AD5F"/>
+            </EntityType>
+            <EntityType Name="ZVH_MGRP_DECType" sap:label="Value Help for Material Group and description" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="matl_group"/>
+                </Key>
+                <Property Name="matl_group" Type="Edm.String" Nullable="false" MaxLength="9" sap:display-format="UpperCase" sap:text="txtsh" sap:label="Material Group"/>
+                <Property Name="txtsh" Type="Edm.String" MaxLength="20" sap:label="Description"/>
+            </EntityType>
+            <Association Name="assoc_A1C083E6802FCE08966301709F63AD5F" sap:content-version="1">
+                <End Type="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType" Multiplicity="1" Role="FromRole_assoc_A1C083E6802FCE08966301709F63AD5F"/>
+                <End Type="ZSALES_DAILY_UPDATE_CDS.ZVH_MGRP_DECType" Multiplicity="0..1" Role="ToRole_assoc_A1C083E6802FCE08966301709F63AD5F"/>
+            </Association>
+            <EntityContainer Name="ZSALES_DAILY_UPDATE_CDS_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
+                <EntitySet Name="Zsales_Daily_Update" EntityType="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVH_MGRP_DEC" EntityType="ZSALES_DAILY_UPDATE_CDS.ZVH_MGRP_DECType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/>
+                <AssociationSet Name="assoc_A1C083E6802FCE08966301709F63AD5F" Association="ZSALES_DAILY_UPDATE_CDS.assoc_A1C083E6802FCE08966301709F63AD5F" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+                    <End EntitySet="Zsales_Daily_Update" Role="FromRole_assoc_A1C083E6802FCE08966301709F63AD5F"/>
+                    <End EntitySet="ZVH_MGRP_DEC" Role="ToRole_assoc_A1C083E6802FCE08966301709F63AD5F"/>
+                </AssociationSet>
+            </EntityContainer>
+            <Annotation Term="Core.SchemaVersion" String="1.0.0" xmlns="http://docs.oasis-open.org/odata/ns/edm"/>
+            <atom:link rel="self" href="https://intadsgwd01.arjas.com:44300/sap/opu/odata/sap/ZSALES_DAILY_UPDATE_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+            <atom:link rel="latest-version" href="https://intadsgwd01.arjas.com:44300/sap/opu/odata/sap/ZSALES_DAILY_UPDATE_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

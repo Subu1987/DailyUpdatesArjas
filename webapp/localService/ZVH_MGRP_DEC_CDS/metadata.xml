@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='BW_BID')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+    </edmx:Reference>
+    <edmx:DataServices m:DataServiceVersion="2.0">
+        <Schema Namespace="ZVH_MGRP_DEC_CDS" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+            <EntityType Name="ZVH_MGRP_DECType" sap:label="Value Help for Material Group and description" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="matl_group"/>
+                </Key>
+                <Property Name="matl_group" Type="Edm.String" Nullable="false" MaxLength="9" sap:display-format="UpperCase" sap:text="txtsh" sap:label="Material Group"/>
+                <Property Name="txtsh" Type="Edm.String" MaxLength="20" sap:label="Description"/>
+            </EntityType>
+            <EntityContainer Name="ZVH_MGRP_DEC_CDS_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
+                <EntitySet Name="ZVH_MGRP_DEC" EntityType="ZVH_MGRP_DEC_CDS.ZVH_MGRP_DECType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/>
+            </EntityContainer>
+            <Annotation Term="Core.SchemaVersion" String="1.0.0" xmlns="http://docs.oasis-open.org/odata/ns/edm"/>
+            <atom:link rel="self" href="https://intadsgwd01.arjas.com:44300/sap/opu/odata/sap/ZVH_MGRP_DEC_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+            <atom:link rel="latest-version" href="https://intadsgwd01.arjas.com:44300/sap/opu/odata/sap/ZVH_MGRP_DEC_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>
