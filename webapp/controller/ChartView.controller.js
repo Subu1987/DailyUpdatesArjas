@@ -21,7 +21,7 @@ sap.ui.define([
 ) {
     "use strict";
 
-    return Controller.extend("com.arjas.zsddailyupd.controller.ChartView", {
+    return Controller.extend("com.arjas.zsddailysalesupd.controller.ChartView", {
 
         onInit: function () {
             this._oModel = this.getOwnerComponent().getModel();
@@ -296,7 +296,7 @@ sap.ui.define([
                         items: [
                             new sap.m.Toolbar({
                                 content: [
-                                    new sap.m.Title({ text: `Material Group: ${sGroupDesc} (${sGroup})` }),
+                                    new sap.m.Title({ text: `Daily Updates on Quantity for last month (MT) Material Group: ${sGroupDesc} (${sGroup})` }),
                                     new sap.m.ToolbarSpacer(),
                                     new sap.m.Button({
                                         icon: "sap-icon://refresh",
@@ -305,10 +305,11 @@ sap.ui.define([
                                     })
                                 ]
                             }),
-                            oChartContainer
+                        
                         ]
                     });
-
+                    
+                    
                     oTab.removeAllContent();
                     oTab.addContent(oVBox);
 

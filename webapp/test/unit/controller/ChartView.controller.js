@@ -1,7 +1,7 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"com/arjas/zsddailyupd/controller/ChartView.controller"
+	"com/arjas/zsddailysalesupd/controller/ChartView.controller"
 ], function (Controller) {
 	"use strict";
 

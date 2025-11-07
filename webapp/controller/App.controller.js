@@ -5,10 +5,9 @@ sap.ui.define(
     function(BaseController) {
       "use strict";
   
-      return BaseController.extend("com.arjas.zsddailyupd.controller.App", {
+      return BaseController.extend("com.arjas.zsddailysalesupd.controller.App", {
         onInit: function() {
         }
       });
     }
   );
-  

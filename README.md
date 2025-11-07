@@ -8,7 +8,7 @@
 |**Template Used**<br>Basic V2|
 |**Service Type**<br>SAP System (ABAP On Premise)|
 |**Service URL**<br>https://intadsgwd01.arjas.com:44300/sap/opu/odata/sap/ZSALES_DELIV_FIORI_CDS|
-|**Module Name**<br>zsddailyupd|
+|**Module Name**<br>zsddailysalesupd|
 |**Application Title**<br>Sales Dashboard(Daily Update on Quantity for last month)|
 |**Namespace**<br>com.arjas|
 |**UI5 Theme**<br>sap_fiori_3|
@@ -17,7 +17,7 @@
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>False|
 
-## zsddailyupd
+## zsddailysalesupd
 
 Sales Dashboard(Daily Update on Quantity for last month)
 
@@ -38,5 +38,3 @@ Sales Dashboard(Daily Update on Quantity for last month)
 #### Pre-requisites:
 
 1. Active NodeJS LTS (Long Term Support) version and associated supported NPM version.  (See https://nodejs.org)
-
-

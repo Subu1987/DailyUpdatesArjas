@@ -14,7 +14,7 @@ sap.ui.define([
 			// start the app UI component
 			this.iStartMyUIComponent({
 				componentConfig: {
-					name: "com.arjas.zsddailyupd",
+					name: "com.arjas.zsddailysalesupd",
 					async: true
 				},
 				hash: oOptions.hash,
