@@ -1,98 +1,103 @@
 <edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common" />
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_UI',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI" />
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='LOCAL')/$value">
-        <edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication" />
-    </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/sap/ZSALES_DAILY_UPDATE_CDS/$metadata">
-        <edmx:Include Namespace="ZSALES_DAILY_UPDATE_CDS" Alias="ZSALES_DAILY_UPDATE_CDS" />
-    </edmx:Reference>
-    <edmx:DataServices>
-        <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="com.arjas.ZSALES_DAILY_UPDATE_CDS">
-            <Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALMONTH">
-                <Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Month" />
-            </Annotations>
-            <Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALDAY">
-                <Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Day" />
-            </Annotations>
-            <Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/INV_QTY">
-                <Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Actual Quantity" />
-            </Annotations>
-            <Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/matl_group" xmlns="http://docs.oasis-open.org/odata/ns/edm" xmlns:com.sap.vocabularies.Common.v1="com.sap.vocabularies.Common.v1">
-                <Annotation Term="com.sap.vocabularies.Common.v1.ValueList">
-                    <Record>
-                        <PropertyValue Property="Label" String="Material Group" />
-                        <PropertyValue Property="CollectionPath" String="ZVH_MGRP_DEC" />
-                        <PropertyValue Property="SearchSupported" Bool="true" />
-                        <PropertyValue Property="Parameters">
-                            <Collection>
-                                <Record Type="com.sap.vocabularies.Common.v1.ValueListParameterOut">
-                                    <PropertyValue Property="LocalDataProperty" PropertyPath="matl_group" />
-                                    <PropertyValue Property="ValueListProperty" String="matl_group" />
-                                </Record>
-                                <!-- Show description column in popup -->
-                                <Record Type="Common.ValueListParameterDisplayOnly">
-                                    <PropertyValue Property="ValueListProperty" String="txtsh" />
-                                </Record>
-                            </Collection>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-            </Annotations>
-            <Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType">
-                <Annotation Term="com.sap.vocabularies.UI.v1.PresentationVariant">
-                    <Record>
-                        <PropertyValue Property="Visualizations">
-                            <Collection>
-                                <AnnotationPath>@com.sap.vocabularies.UI.v1.Chart</AnnotationPath>
-                            </Collection>
-                        </PropertyValue>
-                        <PropertyValue Property="SortOrder">
-                            <Collection>
-                                <Record>
-                                    <PropertyValue Property="Property">
-                                        <PropertyPath>CALDAY</PropertyPath>
-                                    </PropertyValue>
-                                </Record>
-                            </Collection>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="com.sap.vocabularies.UI.v1.Chart">
-                    <Record>
-                        <PropertyValue Property="ChartType" EnumMember="com.sap.vocabularies.UI.v1.ChartType/Line" />
-                        <PropertyValue Property="Dimensions">
-                            <Collection>
-                                <PropertyPath>CALDAY</PropertyPath>
-                            </Collection>
-                        </PropertyValue>
-                        <PropertyValue Property="Measures">
-                            <Collection>
-                                <PropertyPath>INV_QTY</PropertyPath>
-                            </Collection>
-                        </PropertyValue>
-                        <PropertyValue Property="MeasureAttributes">
-                            <Collection>
-                                <!-- Show INV_QTY as Column (Axis1) -->
-                                <Record>
-                                    <PropertyValue Property="Measure" PropertyPath="INV_QTY" />
-                                    <PropertyValue Property="Role" EnumMember="com.sap.vocabularies.UI.v1.ChartMeasureRoleType/Axis1" />
-                                </Record>
-                            </Collection>
-                        </PropertyValue>
-                    </Record>
-                </Annotation>
-                <Annotation Term="UI.SelectionFields">
-                    <Collection>
-                        <PropertyPath>CALMONTH</PropertyPath>
-                        <PropertyPath>matl_group</PropertyPath>
-                    </Collection>
-                </Annotation>
-                <!--  <Annotation Term="UI.Chart">
+	<edmx:Reference
+		Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='LOCAL')/$value">
+		<edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+	</edmx:Reference>
+	<edmx:Reference
+		Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_UI',Version='0001',SAP__Origin='LOCAL')/$value">
+		<edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+	</edmx:Reference>
+	<edmx:Reference
+		Uri="/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='LOCAL')/$value">
+		<edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
+	</edmx:Reference>
+	<edmx:Reference Uri="/sap/opu/odata/sap/ZSALES_DAILY_UPDATE_CDS/$metadata">
+		<edmx:Include Namespace="ZSALES_DAILY_UPDATE_CDS" Alias="ZSALES_DAILY_UPDATE_CDS"/>
+	</edmx:Reference>
+	<edmx:DataServices>
+		<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="com.arjas.ZSALES_DAILY_UPDATE_CDS">
+			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALMONTH">
+				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Month"/>
+			</Annotations>
+			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALDAY">
+				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Day"/>
+			</Annotations>
+			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/INV_QTY">
+				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Actual Quantity"/>
+			</Annotations>
+			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/matl_group" xmlns="http://docs.oasis-open.org/odata/ns/edm"
+				xmlns:com.sap.vocabularies.Common.v1="com.sap.vocabularies.Common.v1">
+				<Annotation Term="com.sap.vocabularies.Common.v1.ValueList">
+					<Record>
+						<PropertyValue Property="Label" String="Material Group"/>
+						<PropertyValue Property="CollectionPath" String="ZVH_MGRP_DEC"/>
+						<PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="com.sap.vocabularies.Common.v1.ValueListParameterOut">
+									<PropertyValue Property="LocalDataProperty" PropertyPath="matl_group"/>
+									<PropertyValue Property="ValueListProperty" String="matl_group"/>
+								</Record>
+								<!-- Show description column in popup -->
+								<Record Type="Common.ValueListParameterDisplayOnly">
+									<PropertyValue Property="ValueListProperty" String="txtsh"/>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType">
+				<Annotation Term="com.sap.vocabularies.UI.v1.PresentationVariant">
+					<Record>
+						<PropertyValue Property="Visualizations">
+							<Collection>
+								<AnnotationPath>@com.sap.vocabularies.UI.v1.Chart</AnnotationPath>
+							</Collection>
+						</PropertyValue>
+						<PropertyValue Property="SortOrder">
+							<Collection>
+								<Record>
+									<PropertyValue Property="Property">
+										<PropertyPath>CALDAY</PropertyPath>
+									</PropertyValue>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+				<Annotation Term="com.sap.vocabularies.UI.v1.Chart">
+					<Record>
+						<PropertyValue Property="ChartType" EnumMember="com.sap.vocabularies.UI.v1.ChartType/Line"/>
+						<PropertyValue Property="Dimensions">
+							<Collection>
+								<PropertyPath>CALDAY</PropertyPath>
+							</Collection>
+						</PropertyValue>
+						<PropertyValue Property="Measures">
+							<Collection>
+								<PropertyPath>INV_QTY</PropertyPath>
+							</Collection>
+						</PropertyValue>
+						<PropertyValue Property="MeasureAttributes">
+							<Collection>
+								<!-- Show INV_QTY as Column (Axis1) -->
+								<Record>
+									<PropertyValue Property="Measure" PropertyPath="INV_QTY"/>
+									<PropertyValue Property="Role" EnumMember="com.sap.vocabularies.UI.v1.ChartMeasureRoleType/Axis1"/>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+				<Annotation Term="UI.SelectionFields">
+					<Collection>
+						<PropertyPath>CALMONTH</PropertyPath>
+						<PropertyPath>CALDAY</PropertyPath>
+						<PropertyPath>plant</PropertyPath>
+					</Collection>
+				</Annotation>
+				<!--  <Annotation Term="UI.Chart">
                     <Record Type="UI.ChartDefinitionType">
                         <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Column" />
                         <PropertyValue Property="Title" String="Sales Data By Month" />
@@ -130,7 +135,7 @@
                         </PropertyValue>
                     </Record>
                 </Annotation> -->
-            </Annotations>
-        </Schema>
-    </edmx:DataServices>
+			</Annotations>
+		</Schema>
+	</edmx:DataServices>
 </edmx:Edmx>

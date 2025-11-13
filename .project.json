@@ -1,6 +1,6 @@
 {
   "deploy": {
     "destination": "GWD",
-    "name": "zsddailysalesup"
+    "name": "ZSDDAILYSALESUP"
   }
 }

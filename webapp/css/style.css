@@ -1,0 +1,129 @@
+/* ===============================================
+   🌐 ZSD Daily Sales Update
+   Author: Subrato
+   Purpose: Clean, stable styling for charts, tabs & tables
+   =============================================== */
+
+/* ---------- General ---------- */
+html, body {
+  height: 100%;
+  background-color: #f9fafb;
+  font-family: "72", "72full", Arial, sans-serif;
+}
+
+/* ---------- Smart Filter Bar ---------- */
+#smartFilterBar {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------- Icon Tab Bar ---------- */
+.sapMITB {
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
+
+.sapMITBFilter > .sapMITBText {
+  font-weight: 600;
+  color: #0a6ed1;
+}
+
+.sapMITBSelected .sapMITBText {
+  color: #0854a0;
+  border-bottom: 2px solid #0a6ed1;
+}
+
+/* ---------- Chart Container ---------- */
+.sapSuiteUiCommonsChartContainer {
+  background-color: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Chart Wrapper (fix for X-axis cut-off) */
+.chartContainer {
+  min-height: 600px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartContentBox {
+  padding-bottom: 3rem !important; /* ✅ ensures X-axis visible */
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+/* ---------- Toolbar (Chart Header) ---------- */
+.sapMToolbar {
+  background-color: #f8f9fb;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 1rem;
+}
+
+.sapMToolbar .sapMTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #32363a;
+}
+
+/* ---------- Buttons ---------- */
+.sapMBtnInner {
+  border-radius: 6px !important;
+}
+
+.sapMBtnInner:hover {
+  background-color: #e6f2fb !important;
+}
+
+/* ---------- Table ---------- */
+.sapMTable {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-top: 0.5rem;
+}
+
+.sapMListTblCell {
+  padding: 0.6rem 0.8rem !important;
+}
+
+.sapMTableTH {
+  background-color: #f2f5f7;
+  font-weight: 600;
+}
+
+/* ---------- Segmented Button ---------- */
+.sapMSegBBtn .sapMSegBBtnInner {
+  padding: 0 0.25rem;
+}
+
+/* ---------- No Data Panel ---------- */
+.sapMPanel {
+  background: linear-gradient(180deg, #f9f9f9 0%, #f0f0f0 100%);
+  border-radius: 12px;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .sapMToolbar .sapMTitle {
+    font-size: 1rem;
+  }
+
+  .chartContentBox {
+    padding: 0.75rem;
+    padding-bottom: 2.5rem !important;
+  }
+}
