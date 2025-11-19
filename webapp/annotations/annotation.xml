@@ -17,10 +17,10 @@
 	<edmx:DataServices>
 		<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="com.arjas.ZSALES_DAILY_UPDATE_CDS">
 			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALMONTH">
-				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Month"/>
+				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar YearMonth (YYYYMM)"/>
 			</Annotations>
 			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/CALDAY">
-				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Day"/>
+				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Calendar Day (YYYYMMDD)"/>
 			</Annotations>
 			<Annotations Target="ZSALES_DAILY_UPDATE_CDS.Zsales_Daily_UpdateType/INV_QTY">
 				<Annotation Term="com.sap.vocabularies.Common.v1.Label" String="Actual Quantity"/>

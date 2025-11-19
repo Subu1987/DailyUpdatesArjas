@@ -13,30 +13,41 @@ sap.ui.define([
 	"sap/m/OverflowToolbar",
 	"sap/m/ToolbarSpacer",
 	"sap/m/Dialog",
-	"sap/m/Title"
-], function (
+	"sap/m/Title",
+	"sap/m/MessageBox",
+	"sap/suite/ui/commons/ChartContainer",
+	"sap/suite/ui/commons/ChartContainerContent"
+], function(
 	Controller, Filter, FilterOperator, MessageToast, BusyIndicator,
 	IconTabFilter, VBox, VizFrame, FlattenedDataset, FeedItem,
-	Button, OverflowToolbar, ToolbarSpacer, Dialog, Title
+	Button, OverflowToolbar, ToolbarSpacer, Dialog, Title,
+	MessageBox, ChartContainer, ChartContainerContent
 ) {
 	"use strict";
 
 	return Controller.extend("com.arjas.zsddailysalesupd.controller.ChartView", {
 
-		onInit: function () {
+		//------------------------------------------------------
+		// INIT
+		//------------------------------------------------------
+		onInit: function() {
+			this._bWarningShown = false;
 			this._oModel = this.getOwnerComponent().getModel();
 			this._oSmartFilterBar = this.byId("smartFilterBar");
 			this._oIconTabBar = this.byId("iconTabBar");
-			this._aAllMaterialGroups = []; // ✅ cache for material groups
+			this._aAllMaterialGroups = [];
 
-			const that = this;
+			var that = this;
 			BusyIndicator.show(0);
 
-			this._oModel.metadataLoaded().then(function () {
-				that._oSmartFilterBar.attachInitialized(function () {
-					// 👇 Default CALMONTH to current YYYYMM
-					const oNow = new Date();
-					const sDefaultMonth = oNow.getFullYear().toString() + ("0" + (oNow.getMonth() + 1)).slice(-2);
+			this._oModel.metadataLoaded().then(function() {
+				that._oSmartFilterBar.attachInitialized(function() {
+
+					var oNow = new Date();
+					var sDefaultMonth =
+						oNow.getFullYear().toString() +
+						("0" + (oNow.getMonth() + 1)).slice(-2);
+
 					that._oSmartFilterBar.setFilterData({
 						CALMONTH: {
 							ranges: [{
@@ -52,329 +63,538 @@ sap.ui.define([
 			});
 		},
 
-		/** 🔍 Trigger search/filter action with validation */
-		onSearch: function () {
-			const oSFB = this._oSmartFilterBar;
-			const oData = oSFB.getFilterData();
+		//------------------------------------------------------
+		// SEARCH GO BUTTON
+		//------------------------------------------------------
+		onSearch: function() {
+			this._bWarningShown = false; // ← reset so next warning can show
+			var oSFB = this._oSmartFilterBar;
+			var oData = oSFB.getFilterData();
 
-			const bHasMonth = (oData.CALMONTH && oData.CALMONTH.ranges && oData.CALMONTH.ranges.length > 0);
-			const bHasDay = (oData.CALDAY && oData.CALDAY.ranges && oData.CALDAY.ranges.length > 0);
+			var bHasMonth =
+				oData.CALMONTH &&
+				oData.CALMONTH.ranges &&
+				oData.CALMONTH.ranges.length > 0;
 
-			// ⚠️ Validation: both fields entered
+			var bHasDay =
+				oData.CALDAY &&
+				oData.CALDAY.ranges &&
+				oData.CALDAY.ranges.length > 0;
+
 			if (bHasMonth && bHasDay) {
-				sap.m.MessageBox.warning("Please choose either Calendar Month or Calendar Day, not both.");
+				MessageBox.warning("Please choose either Calendar Month or Calendar Day, not both.");
 				return;
 			}
 
-			// Continue with loading tabs
 			this._loadMaterialGroupsAndTabs();
+
+			var that = this;
+			setTimeout(function() {
+				var oIconTabBar = that._oIconTabBar;
+				var aItems = oIconTabBar.getItems();
+				var sKey = oIconTabBar.getSelectedKey();
+				var oSelectedTab = null;
+
+				if (sKey) {
+					for (var i = 0; i < aItems.length; i++) {
+						if (aItems[i].getKey() === sKey) {
+							oSelectedTab = aItems[i];
+							break;
+						}
+					}
+				}
+
+				if (!oSelectedTab) {
+					oSelectedTab = aItems[0];
+				}
+
+				if (oSelectedTab) {
+					that._createChartForGroup(oSelectedTab.getKey(), oSelectedTab);
+				}
+			}, 200);
 		},
 
-		/** 📦 Load hardcoded Material Groups and build tabs (with caching) */
-		_loadMaterialGroupsAndTabs: function () {
-			const that = this;
+		//------------------------------------------------------
+		// LOAD MATERIAL GROUP TABS
+		//------------------------------------------------------
+		_loadMaterialGroupsAndTabs: function() {
+			var that = this;
 			BusyIndicator.show(0);
+
 			this._oIconTabBar.removeAllItems();
 
-			const aAllowedGroups = [
+			var aAllowedGroups = [
 				"Z050", "Z051", "Z069", "Z070",
 				"Z072", "Z073", "Z074", "Z075",
 				"Z077", "Z100", "Z101", "Z102"
 			];
 
-			// ✅ Use cached data if available
-			if (this._aAllMaterialGroups && this._aAllMaterialGroups.length) {
+			if (this._aAllMaterialGroups.length) {
 				this._createTabsFromGroups(this._aAllMaterialGroups, aAllowedGroups);
 				BusyIndicator.hide();
 				return;
 			}
 
-			// 🔄 Fetch once from CDS if not cached
 			this._oModel.read("/ZVH_MGRP_DEC", {
-				urlParameters: { $select: "matl_group,txtsh", $top: "1000" },
-				success: function (oData) {
-					that._aAllMaterialGroups = oData.results; // cache results
+				urlParameters: {
+					$select: "matl_group,txtsh",
+					$top: "1000"
+				},
+				success: function(oData) {
+					that._aAllMaterialGroups = oData.results;
 					that._createTabsFromGroups(oData.results, aAllowedGroups);
 					BusyIndicator.hide();
 				},
-				error: function (err) {
+				error: function() {
 					BusyIndicator.hide();
-					console.error("Failed to read Material Groups:", err);
 					MessageToast.show("Error loading Material Groups");
 				}
 			});
 		},
 
-		/** 🧱 Create Tabs for Material Groups */
-		_createTabsFromGroups: function (aData, aAllowedGroups) {
-			const that = this;
+		_createTabsFromGroups: function(aData, aAllowedGroups) {
+			var that = this;
 
-			const aFiltered = aData.filter(r =>
-				r.matl_group && aAllowedGroups.indexOf(r.matl_group) !== -1
-			);
-
-			if (!aFiltered.length) {
-				MessageToast.show("No matching Material Groups found");
-				return;
-			}
-
-			aFiltered.forEach(function (group) {
-				const sTitle = group.txtsh ? `${group.txtsh} (${group.matl_group})` : group.matl_group;
-				const oTab = new sap.m.IconTabFilter({
-					key: group.matl_group,
-					text: sTitle,
-					icon: "sap-icon://product"
-				});
-				that._oIconTabBar.addItem(oTab);
+			var aFiltered = aData.filter(function(r) {
+				return r.matl_group && aAllowedGroups.indexOf(r.matl_group) !== -1;
 			});
 
-			const oFirst = that._oIconTabBar.getItems()[0];
+			aFiltered.forEach(function(group) {
+				var sTitle = group.txtsh ?
+					(group.txtsh + " (" + group.matl_group + ")") :
+					group.matl_group;
+
+				that._oIconTabBar.addItem(
+					new IconTabFilter({
+						key: group.matl_group,
+						text: sTitle,
+						icon: "sap-icon://product"
+					})
+				);
+			});
+
+			var oFirst = that._oIconTabBar.getItems()[0];
 			if (oFirst) {
 				that._createChartForGroup(oFirst.getKey(), oFirst);
 			}
 		},
 
-		/** 🏷️ When a tab (material group) is selected */
-		onTabSelect: function (oEvent) {
-			const sKey = oEvent.getParameter("key");
-			const oTab = this._oIconTabBar.getItems().find(tab => tab.getKey() === sKey);
-			if (oTab && !oTab.getContent().length) {
+		//------------------------------------------------------
+		// TAB SELECT
+		//------------------------------------------------------
+		onTabSelect: function(oEvent) {
+
+			this._bWarningShown = false; // ← reset warning for new tab
+
+			var sKey = oEvent.getParameter("key");
+			var aItems = this._oIconTabBar.getItems();
+			var oTab = null;
+
+			for (var i = 0; i < aItems.length; i++) {
+				if (aItems[i].getKey() === sKey) {
+					oTab = aItems[i];
+					break;
+				}
+			}
+
+			if (oTab && oTab.getContent().length === 0) {
+				this._createChartForGroup(sKey, oTab);
+			} else {
 				this._createChartForGroup(sKey, oTab);
 			}
 		},
 
-		/** 📊 Create chart & table for selected material group */
-		_createChartForGroup: function (sGroup, oTab) {
-			const that = this;
-			let bBusyOpen = false;
+		//------------------------------------------------------
+		// FINAL CHART CREATION WITH POST VALIDATION
+		//------------------------------------------------------
+		_createChartForGroup: function(sGroup, oTab) {
+			var that = this;
 
-			const oBusyDialog = new sap.m.BusyDialog({
-				text: "Loading chart data...",
-				showCancelButton: false
+			var oBusyDialog = new Dialog({
+				title: "Loading",
+				content: new sap.m.BusyIndicator({
+					size: "2rem"
+				}),
+				type: "Message"
 			});
 			oBusyDialog.open();
-			bBusyOpen = true;
 
-			this._readChartData(sGroup)
-				.then(function (aData) {
-					if (bBusyOpen) {
-						oBusyDialog.close();
-						bBusyOpen = false;
+			var oFilterInfo = this._getSmartFilterBarFilters();
+			var aPlantValues = oFilterInfo.plantValues;
+
+			//-----------------------------------------
+			// 1️⃣ FIRST READ ACTUAL CHART DATA
+			//-----------------------------------------
+			this._readChartData(sGroup).then(function(aData) {
+
+				//-----------------------------------------
+				// 2️⃣ NOW VALIDATE PLANTS BASED ON REAL DATA
+				//-----------------------------------------
+				var plantMap = {};
+				aData.forEach(function(row) {
+					if (row.plant) {
+						plantMap[row.plant] = true;
+					}
+				});
+
+				var missing = [];
+				for (var i = 0; i < aPlantValues.length; i++) {
+					if (!plantMap[aPlantValues[i]]) {
+						missing.push(aPlantValues[i]);
+					}
+				}
+
+				if (missing.length > 0) {
+					if (!that._bWarningShown) {
+						that._bWarningShown = true; // prevent second popup
+						MessageBox.warning(
+							"No data found for plant(s): " + missing.join(", ")
+						);
 					}
 
-					if (!aData.length) {
-						const oNoDataVBox = new sap.m.VBox({
-							width: "100%",
-							height: "400px",
-							justifyContent: "Center",
-							alignItems: "Center",
-							items: [
-								new sap.ui.core.Icon({
-									src: "sap-icon://database",
-									size: "4rem",
-									color: "#6a6d70"
-								}),
-								new sap.m.Text({
-									text: "No Data Available",
-									design: "Bold",
-									textAlign: "Center"
-								}),
-								new sap.m.Text({
-									text: "No records found for Material Group " + sGroup + ".",
-									textAlign: "Center"
-								}),
-								new sap.m.Button({
-									text: "Try Again",
-									icon: "sap-icon://refresh",
-									type: "Emphasized",
-									press: function () {
-										that._createChartForGroup(sGroup, oTab);
-									}
-								})
-							]
-						});
+				}
 
-						oTab.removeAllContent();
-						oTab.addContent(oNoDataVBox);
-						return;
-					}
+				//-----------------------------------------
+				// 3️⃣ Continue chart render
+				//-----------------------------------------
+				if (oBusyDialog) {
+					oBusyDialog.close();
+				}
 
-					const sGroupDesc = oTab.getText().indexOf("(") !== -1 ? oTab.getText().split("(")[0].trim() : sGroup;
-
-					// 🏭 Get Plant from SmartFilterBar (for header display)
-					const oFilterData = that._oSmartFilterBar.getFilterData();
-					let sPlantHeader = "";
-					if (oFilterData.plant && oFilterData.plant.ranges && oFilterData.plant.ranges.length) {
-						sPlantHeader = " | Plant: " + oFilterData.plant.ranges[0].value1;
-					}
-
-					// VizFrame setup
-					const oViz = new sap.viz.ui5.controls.VizFrame({
+				if (!aData.length) {
+					var oNoDataVBox = new sap.m.VBox({
 						width: "100%",
-						height: "480px",
-						vizType: "column",
-						uiConfig: { applicationSet: "fiori" }
-					});
-
-					const generateColor = function () {
-						const hue = Math.floor(Math.random() * 360);
-						const saturation = 70 + Math.floor(Math.random() * 30);
-						const lightness = 45 + Math.floor(Math.random() * 15);
-						return `hsl(${hue},${saturation}%,${lightness}%)`;
-					};
-					const aColors = aData.map(() => generateColor());
-
-					const oDataset = new sap.viz.ui5.data.FlattenedDataset({
-						dimensions: [{ name: "Calendar Day", value: "{CALDAY}" }],
-						measures: [{ name: "Actual Quantity", value: "{INV_QTY}" }],
-						data: { path: "/results" }
-					});
-
-					const oModel = new sap.ui.model.json.JSONModel({ results: aData });
-					oViz.setDataset(oDataset);
-					oViz.setModel(oModel);
-
-					oViz.setVizProperties({
-						title: {
-							text: `Actual Quantity – ${sGroupDesc} (${sGroup})`,
-							visible: true
-						},
-						plotArea: {
-							dataLabel: { visible: true },
-							colorPalette: aColors,
-							drawingEffect: "glossy"
-						},
-						legend: { visible: true },
-						categoryAxis: { title: { visible: true, text: "Calendar Day" } },
-						valueAxis: { title: { visible: true, text: "Quantity" } }
-					});
-
-					oViz.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-						uid: "categoryAxis",
-						type: "Dimension",
-						values: ["Calendar Day"]
-					}));
-					oViz.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
-						uid: "valueAxis",
-						type: "Measure",
-						values: ["Actual Quantity"]
-					}));
-
-					// Table
-					const oTable = new sap.m.Table({
-						inset: false,
-						growing: true,
-						columns: [
-							new sap.m.Column({ header: new sap.m.Label({ text: "Calendar Day" }) }),
-							new sap.m.Column({ header: new sap.m.Label({ text: "Actual Quantity" }) })
-						]
-					});
-
-					oTable.bindItems({
-						path: "/results",
-						template: new sap.m.ColumnListItem({
-							cells: [
-								new sap.m.Text({ text: "{CALDAY}" }),
-								new sap.m.ObjectNumber({ number: "{INV_QTY}" })
-							]
-						})
-					});
-					oTable.setModel(oModel);
-
-					const oChartContent = new sap.suite.ui.commons.ChartContainerContent({
-						icon: "sap-icon://horizontal-bar-chart",
-						title: "Chart View",
-						content: [oViz]
-					});
-					const oTableContent = new sap.suite.ui.commons.ChartContainerContent({
-						icon: "sap-icon://table-chart",
-						title: "Table View",
-						content: [oTable]
-					});
-					const oChartContainer = new sap.suite.ui.commons.ChartContainer({
-						showFullScreen: true,
-						autoAdjustHeight: true,
-						content: [oChartContent, oTableContent]
-					});
-
-					const oVBox = new sap.m.VBox({
+						height: "400px",
+						justifyContent: "Center",
+						alignItems: "Center",
 						items: [
-							new sap.m.Toolbar({
-								content: [
-									new sap.m.Title({
-										text: "Daily Updates on Quantity" + sPlantHeader +
-											" | Material Group: " + sGroupDesc + " (" + sGroup + ")"
-									}),
-									new sap.m.ToolbarSpacer(),
-									new sap.m.Button({
-										icon: "sap-icon://refresh",
-										tooltip: "Reload Data",
-										press: function () {
-											that._createChartForGroup(sGroup, oTab);
-										}
-									})
-								]
+							new sap.ui.core.Icon({
+								src: "sap-icon://database",
+								size: "4rem",
+								color: "#6a6d70"
 							}),
-							oChartContainer
+							new sap.m.Text({
+								text: "No Data Available",
+								design: "Bold",
+								textAlign: "Center"
+							}),
+							new sap.m.Text({
+								text: "No records found for Material Group " + sGroup + ".",
+								textAlign: "Center"
+							}),
+							new sap.m.Button({
+								text: "Try Again",
+								icon: "sap-icon://refresh",
+								type: "Emphasized",
+								press: function() {
+									that._createChartForGroup(sGroup, oTab);
+								}
+							})
 						]
 					});
 
 					oTab.removeAllContent();
-					oTab.addContent(oVBox);
-				})
-				.catch(function (err) {
-					if (bBusyOpen) oBusyDialog.close();
-					console.error("Chart load failed:", sGroup, err);
-					MessageToast.show("Error loading chart data");
+					oTab.addContent(oNoDataVBox);
+					return;
+				}
+
+				//-----------------------------------------
+				// BUILD CHART
+				//-----------------------------------------
+				var sGroupDesc = sGroup;
+				var txt = oTab.getText();
+				var idx = txt.indexOf("(");
+				if (idx !== -1) {
+					sGroupDesc = txt.substring(0, idx).trim();
+				}
+
+				var oFilterData = that._oSmartFilterBar.getFilterData();
+				var sPlantHeader = "";
+
+				if (oFilterData.plant &&
+					oFilterData.plant.ranges &&
+					oFilterData.plant.ranges.length > 0) {
+
+					var vals = [];
+					for (var i = 0; i < oFilterData.plant.ranges.length; i++) {
+						vals.push(oFilterData.plant.ranges[i].value1);
+					}
+					sPlantHeader = " | Plant: " + vals.join(", ");
+				}
+
+				var oViz = new VizFrame({
+					width: "100%",
+					height: "480px",
+					vizType: "column",
+					uiConfig: {
+						applicationSet: "fiori"
+					}
 				});
+
+				var randColor = function() {
+					var h = Math.floor(Math.random() * 360);
+					var s = 70 + Math.random() * 20;
+					var l = 45 + Math.random() * 10;
+					return "hsl(" + h + "," + s + "%," + l + "%)";
+				};
+
+				var aColors = [];
+				for (var i = 0; i < aData.length; i++) {
+					aColors.push(randColor());
+				}
+
+				var oDataset = new FlattenedDataset({
+					dimensions: [{
+						name: "Calendar Day",
+						value: "{CALDAY}"
+					}],
+					measures: [{
+						name: "Actual Quantity",
+						value: "{INV_QTY}"
+					}],
+					data: {
+						path: "/results"
+					}
+				});
+
+				var oModel = new sap.ui.model.json.JSONModel({
+					results: aData
+				});
+
+				oViz.setDataset(oDataset);
+				oViz.setModel(oModel);
+
+				oViz.setVizProperties({
+					title: {
+						text: "Actual Quantity – " + sGroupDesc + " (" + sGroup + ")",
+						visible: true
+					},
+					plotArea: {
+						dataLabel: {
+							visible: true
+						},
+						colorPalette: aColors,
+						drawingEffect: "glossy"
+					}
+				});
+
+				oViz.addFeed(new FeedItem({
+					uid: "categoryAxis",
+					type: "Dimension",
+					values: ["Calendar Day"]
+				}));
+				oViz.addFeed(new FeedItem({
+					uid: "valueAxis",
+					type: "Measure",
+					values: ["Actual Quantity"]
+				}));
+
+				//---------------------------------------------------
+				// TABLE
+				//---------------------------------------------------
+				var oTable = new sap.m.Table({
+					columns: [
+						new sap.m.Column({
+							header: new sap.m.Label({
+								text: "Calendar Day"
+							})
+						}),
+						new sap.m.Column({
+							header: new sap.m.Label({
+								text: "Actual Quantity"
+							})
+						})
+					]
+				});
+
+				oTable.bindItems({
+					path: "/results",
+					template: new sap.m.ColumnListItem({
+						cells: [
+							new sap.m.Text({
+								text: "{CALDAY}"
+							}),
+							new sap.m.ObjectNumber({
+								number: "{INV_QTY}"
+							})
+						]
+					})
+				});
+				oTable.setModel(oModel);
+
+				//---------------------------------------------------
+				// CHART CONTAINER
+				//---------------------------------------------------
+				var oChartContent = new ChartContainerContent({
+					icon: "sap-icon://horizontal-bar-chart",
+					title: "Chart View",
+					content: [oViz]
+				});
+
+				var oTableContent = new ChartContainerContent({
+					icon: "sap-icon://table-chart",
+					title: "Table View",
+					content: [oTable]
+				});
+
+				var oContainer = new ChartContainer({
+					showFullScreen: true,
+					autoAdjustHeight: true,
+					content: [oChartContent, oTableContent]
+				});
+
+				var oVBox = new VBox({
+					items: [
+						new sap.m.Toolbar({
+							content: [
+								new Title({
+									text: "Daily Updates on Quantity" +
+										sPlantHeader +
+										" | Material Group: " +
+										sGroupDesc + " (" + sGroup + ")"
+								}),
+								new ToolbarSpacer(),
+								new Button({
+									icon: "sap-icon://refresh",
+									press: function() {
+										that._createChartForGroup(sGroup, oTab);
+									}
+								})
+							]
+						}),
+						oContainer
+					]
+				});
+
+				oTab.removeAllContent();
+				oTab.addContent(oVBox);
+
+			});
 		},
 
-		/** 📥 Fetch chart data filtered by CALMONTH / CALDAY / plant + Material Group */
-		_readChartData: function (sGroup) {
-			const that = this;
-			return new Promise(function (resolve, reject) {
-				const aFilters = that._getSmartFilterBarFilters();
+		//------------------------------------------------------
+		// READ DATA (SUM ACROSS PLANTS)
+		//------------------------------------------------------
+		_readChartData: function(sGroup) {
+			var that = this;
+
+			return new Promise(function(resolve, reject) {
+
+				var oInfo = that._getSmartFilterBarFilters();
+				var aFilters = oInfo.filters.slice();
+				var aPlantValues = oInfo.plantValues;
+
 				aFilters.push(new Filter("matl_group", FilterOperator.EQ, sGroup));
+
+				if (aPlantValues.length) {
+					var pf = [];
+					for (var i = 0; i < aPlantValues.length; i++) {
+						pf.push(new Filter("plant", FilterOperator.EQ, aPlantValues[i]));
+					}
+					aFilters.push(new Filter({
+						filters: pf,
+						and: false
+					}));
+				}
 
 				that._oModel.read("/Zsales_Daily_Update", {
 					filters: aFilters,
-					urlParameters: { $select: "CALDAY,INV_QTY,matl_group,plant", $orderby: "CALDAY" },
-					success: function (oData) {
-						const results = oData.results.map(r => ({
-							CALDAY: r.CALDAY,
-							INV_QTY: +r.INV_QTY || 0
-						}));
+					urlParameters: {
+						$select: "CALDAY,INV_QTY,plant,matl_group",
+						$orderby: "CALDAY"
+					},
+					success: function(oData) {
+
+						var map = {};
+
+						(oData.results || []).forEach(function(r) {
+							var day = r.CALDAY;
+							var qty = parseFloat(r.INV_QTY) || 0;
+
+							if (!map[day]) {
+								map[day] = 0;
+							}
+							map[day] += qty;
+
+							r.day = day;
+						});
+
+						var results = [];
+						var keys = Object.keys(map).sort();
+
+						for (var i = 0; i < keys.length; i++) {
+							results.push({
+								CALDAY: keys[i],
+								INV_QTY: map[keys[i]],
+								plant: (oData.results.find(function(x) {
+									return x.CALDAY === keys[i];
+								}) || {}).plant
+							});
+						}
+
 						resolve(results);
 					},
 					error: reject
 				});
+
 			});
 		},
 
-		/** 🧮 Extract filter values with priority logic: CALDAY > CALMONTH */
-		_getSmartFilterBarFilters: function () {
-			const oSFB = this._oSmartFilterBar;
-			if (!oSFB) return [];
+		//------------------------------------------------------
+		// GET SFB FILTERS SAFELY
+		//------------------------------------------------------
+		_getSmartFilterBarFilters: function() {
+			var oSFB = this._oSmartFilterBar;
 
-			const oData = oSFB.getFilterData();
-			const aFilters = [];
-
-			const bUseCalDay = (oData.CALDAY && oData.CALDAY.ranges && oData.CALDAY.ranges.length);
-
-			if (bUseCalDay) {
-				const r = oData.CALDAY.ranges[0];
-				aFilters.push(new Filter("CALDAY", r.operation === "BT" ? FilterOperator.BT : FilterOperator.EQ, r.value1, r.value2));
-			} else if (oData.CALMONTH && oData.CALMONTH.ranges && oData.CALMONTH.ranges.length) {
-				const r = oData.CALMONTH.ranges[0];
-				aFilters.push(new Filter("CALMONTH", r.operation === "BT" ? FilterOperator.BT : FilterOperator.EQ, r.value1, r.value2));
+			if (!oSFB) {
+				return {
+					filters: [],
+					plantValues: []
+				};
 			}
 
-			if (oData.plant && oData.plant.ranges && oData.plant.ranges.length) {
-				const r = oData.plant.ranges[0];
-				aFilters.push(new Filter("plant", FilterOperator.EQ, r.value1));
+			var oData = oSFB.getFilterData();
+			var aFilters = [];
+			var aPlants = [];
+
+			var bUseDay =
+				oData.CALDAY &&
+				oData.CALDAY.ranges &&
+				oData.CALDAY.ranges.length > 0;
+
+			if (bUseDay) {
+				var r = oData.CALDAY.ranges[0];
+				var op = (r.operation === "BT") ? FilterOperator.BT : FilterOperator.EQ;
+				aFilters.push(new Filter("CALDAY", op, r.value1, r.value2));
 			}
 
-			return aFilters;
+			if (!bUseDay &&
+				oData.CALMONTH &&
+				oData.CALMONTH.ranges &&
+				oData.CALMONTH.ranges.length > 0) {
+
+				var rm = oData.CALMONTH.ranges[0];
+				var opm = (rm.operation === "BT") ? FilterOperator.BT : FilterOperator.EQ;
+				aFilters.push(new Filter("CALMONTH", opm, rm.value1, rm.value2));
+			}
+
+			if (oData.plant &&
+				oData.plant.ranges &&
+				oData.plant.ranges.length > 0) {
+
+				for (var i = 0; i < oData.plant.ranges.length; i++) {
+					var val = oData.plant.ranges[i].value1;
+					if (val) {
+						aPlants.push(val);
+					}
+				}
+			}
+
+			return {
+				filters: aFilters,
+				plantValues: aPlants
+			};
 		}
+
 	});
 });
