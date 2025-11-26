@@ -1,51 +1,16 @@
-<mvc:View
-    xmlns:mvc="sap.ui.core.mvc"
-    xmlns:smartchart="sap.ui.comp.smartchart"
-    xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
-    xmlns="sap.m"
-    xmlns:l="sap.ui.layout"
-    controllerName="com.arjas.zsddailysalesupd.controller.ChartView"
->
-    <!-- Main Scroll Container -->
-    <ScrollContainer
-        id="mainScroll"
-        width="100%"
-        height="100vh"
-        horizontal="true"
-        vertical="true"
-        focusable="true"
-        class="sapUiSizeCompact"
-    >
-        <VBox
-            class="sapUiMediumMargin sapUiNoContentPadding"
-            width="100%"
-        >
-            <!-- Smart Filter Bar -->
-            <smartFilterBar:SmartFilterBar
-                id="smartFilterBar"
-                entitySet="Zsales_Daily_Update"
-                useToolbar="true"
-                useSmartField="true"
-                showMessages="true"
-                useVariantManagement="true"
-                persistencyKey="SmartFilterBarKey"
-                search=".onSearch"
-            />
-
-            <!-- Chart Tabs -->
-            <VBox
-                class="sapUiNoContentPadding sapUiSmallMarginTop"
-                width="100%"
-            >
-                <IconTabBar
-                    id="iconTabBar"
-                    expandable="false"
-                    select=".onTabSelect"
-                    applyContentPadding="false"
-                    class="sapUiNoContentPadding"
-                    stretchContentHeight="true"
-                />
-            </VBox>
-        </VBox>
-    </ScrollContainer>
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:smartchart="sap.ui.comp.smartchart" xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
+	xmlns="sap.m" xmlns:l="sap.ui.layout" controllerName="com.arjas.zsddailysalesupd.controller.ChartView">
+	<!-- Main Scroll Container -->
+	<ScrollContainer id="mainScroll" width="100%" height="100vh" horizontal="true" vertical="true" focusable="true" class="sapUiSizeCompact">
+		<VBox class="sapUiMediumMargin sapUiNoContentPadding" width="100%">
+			<!-- Smart Filter Bar -->
+			<smartFilterBar:SmartFilterBar id="smartFilterBar" entitySet="Zsales_Daily_Update" useToolbar="true" useSmartField="true"
+				showMessages="true" useVariantManagement="true" persistencyKey="SmartFilterBarKey" search=".onSearch"/>
+			<!-- Chart Tabs -->
+			<VBox class="sapUiNoContentPadding sapUiSmallMarginTop" width="100%">
+				<IconTabBar id="iconTabBar" expandable="false" select=".onTabSelect" applyContentPadding="false" class="sapUiNoContentPadding"
+					stretchContentHeight="true"/>
+			</VBox>
+		</VBox>
+	</ScrollContainer>
 </mvc:View>

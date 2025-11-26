@@ -61,6 +61,12 @@ sap.ui.define([
 					BusyIndicator.hide();
 				});
 			});
+
+			// Create a JSONModel to store KPI values
+			this._oKpiModel = new sap.ui.model.json.JSONModel({
+				totalActualQty: 0
+			});
+			this.getView().setModel(this._oKpiModel, "kpiModel");
 		},
 
 		//------------------------------------------------------
@@ -117,37 +123,138 @@ sap.ui.define([
 		//------------------------------------------------------
 		// LOAD MATERIAL GROUP TABS
 		//------------------------------------------------------
+		// _loadMaterialGroupsAndTabs: function() {
+		// 	var that = this;
+		// 	BusyIndicator.show(0);
+
+		// 	this._oIconTabBar.removeAllItems();
+
+		// 	var aAllowedGroups = [
+		// 		"Z050", "Z051", "Z069", "Z070",
+		// 		"Z072", "Z073", "Z074", "Z075",
+		// 		"Z077", "Z100", "Z101", "Z102"
+		// 	];
+
+		// 	if (this._aAllMaterialGroups.length) {
+		// 		this._createTabsFromGroups(this._aAllMaterialGroups, aAllowedGroups);
+		// 		BusyIndicator.hide();
+		// 		return;
+		// 	}
+
+		// 	this._oModel.read("/ZVH_MGRP_DEC", {
+		// 		urlParameters: {
+		// 			$select: "matl_group,txtsh",
+		// 			$top: "1000"
+		// 		},
+		// 		success: function(oData) {
+		// 			that._aAllMaterialGroups = oData.results;
+		// 			that._createTabsFromGroups(oData.results, aAllowedGroups);
+		// 			BusyIndicator.hide();
+		// 		},
+		// 		error: function() {
+		// 			BusyIndicator.hide();
+		// 			MessageToast.show("Error loading Material Groups");
+		// 		}
+		// 	});
+		// },
+
 		_loadMaterialGroupsAndTabs: function() {
 			var that = this;
 			BusyIndicator.show(0);
-
 			this._oIconTabBar.removeAllItems();
 
+			// ✅ Whitelisted Material Groups
 			var aAllowedGroups = [
 				"Z050", "Z051", "Z069", "Z070",
 				"Z072", "Z073", "Z074", "Z075",
 				"Z077", "Z100", "Z101", "Z102"
 			];
 
-			if (this._aAllMaterialGroups.length) {
-				this._createTabsFromGroups(this._aAllMaterialGroups, aAllowedGroups);
-				BusyIndicator.hide();
-				return;
-			}
-
 			this._oModel.read("/ZVH_MGRP_DEC", {
 				urlParameters: {
 					$select: "matl_group,txtsh",
-					$top: "1000"
+					$top: "1000",
 				},
 				success: function(oData) {
-					that._aAllMaterialGroups = oData.results;
-					that._createTabsFromGroups(oData.results, aAllowedGroups);
+					var mGroupDesc = {};
+
+					console.log(oData);
+
+					// ✅ Map available descriptions from backend
+					oData.results.forEach(r => {
+						if (r.matl_group && aAllowedGroups.includes(r.matl_group)) {
+							mGroupDesc[r.matl_group] = r.txtsh || "";
+						}
+					});
+
+					// ✅ Create all tabs — even if group not in OData
+					// aAllowedGroups.forEach(function(sGroup) {
+					// 	// var sDesc = mGroupDesc[sGroup] || "";
+					// 	// var sTitle = sDesc ? `${sDesc} (${sGroup})` : sGroup;
+					// 	// 🟢 FIXED — Use description from map
+					// 	var sDesc = mGroupDesc[sGroup] || "";
+					// 	var sTitle = sDesc ? `${sDesc} (${sGroup})` : sGroup;
+
+					// 	var oTab = new sap.m.IconTabFilter({
+					// 		key: sGroup,
+					// 		text: sTitle,
+					// 		tooltip: sTitle,
+					// 		icon: "sap-icon://product",
+					// 		// ✅ Add margin for better spacing
+					// 		class: "sapUiSmallMarginEnd"
+					// 	});
+
+					// 	that._oIconTabBar.addItem(oTab);
+					// });
+					// ✅ Create all tabs — even if group not in OData (guarded against duplicates)
+					aAllowedGroups.forEach(function(sGroup) {
+						// skip if a tab with this key already exists
+						var aExisting = that._oIconTabBar.getItems();
+						var bExists = false;
+						for (var j = 0; j < aExisting.length; j++) {
+							if (aExisting[j].getKey && aExisting[j].getKey() === sGroup) {
+								bExists = true;
+								break;
+							}
+						}
+						if (bExists) {
+							return; // already present — skip
+						}
+
+						var sDesc = mGroupDesc[sGroup] || "";
+						var sTitle = sDesc ? (sDesc + " (" + sGroup + ")") : sGroup;
+
+						var oTab = new sap.m.IconTabFilter({
+							key: sGroup,
+							text: sTitle,
+							tooltip: sTitle,
+							icon: "sap-icon://product",
+							// spacing class (optional)
+							class: "sapUiSmallMarginEnd"
+						});
+
+						that._oIconTabBar.addItem(oTab);
+					});
+
+					// Load first tab
+					// var sFirst = aAllowedGroups[0];
+					// var oFirstTab = that._oIconTabBar.getItems()[0];
+					// that._createChartForGroup(sFirst, oFirstTab);
+
+					var sFirst = aAllowedGroups[0];
+					var oFirstTab = that._oIconTabBar.getItems()[0];
+
+					// FIX: force UI5 to treat first tab as selected
+					that._oIconTabBar.setSelectedKey(sFirst);
+
+					// FIX: now load the correct content
+					that._createChartForGroup(sFirst, oFirstTab);
+
 					BusyIndicator.hide();
 				},
 				error: function() {
 					BusyIndicator.hide();
-					MessageToast.show("Error loading Material Groups");
+					MessageToast.show("Failed to fetch Material Groups");
 				}
 			});
 		},
@@ -210,12 +317,17 @@ sap.ui.define([
 		_createChartForGroup: function(sGroup, oTab) {
 			var that = this;
 
-			var oBusyDialog = new Dialog({
-				title: "Loading",
-				content: new sap.m.BusyIndicator({
-					size: "2rem"
-				}),
-				type: "Message"
+			// var oBusyDialog = new Dialog({
+			// 	title: "Loading",
+			// 	content: new sap.m.BusyIndicator({
+			// 		size: "2rem"
+			// 	}),
+			// 	type: "Message"
+			// });
+			// oBusyDialog.open();
+			const oBusyDialog = new sap.m.BusyDialog({
+				text: "Loading chart data...",
+				showCancelButton: false
 			});
 			oBusyDialog.open();
 
@@ -322,6 +434,12 @@ sap.ui.define([
 					sPlantHeader = " | Plant: " + vals.join(", ");
 				}
 
+				// After reading chart data from backend
+				var totalQuantity = aData.reduce((sum, r) => sum + (r.INV_QTY || 0), 0);
+
+				// Update the KPI model
+				that._oKpiModel.setProperty("/totalActualQty", totalQuantity.toFixed(2));
+
 				var oViz = new VizFrame({
 					width: "100%",
 					height: "480px",
@@ -330,6 +448,12 @@ sap.ui.define([
 						applicationSet: "fiori"
 					}
 				});
+
+				// Add Popover
+				const oPopOver = new sap.viz.ui5.controls.Popover({
+					formatString: ["#,##0.00"]
+				});
+				oPopOver.connect(oViz.getVizUid());
 
 				var randColor = function() {
 					var h = Math.floor(Math.random() * 360);
@@ -445,13 +569,18 @@ sap.ui.define([
 
 				var oVBox = new VBox({
 					items: [
+
+						// --- Header Toolbar ---
 						new sap.m.Toolbar({
 							content: [
 								new Title({
-									text: "Daily Updates on Quantity" +
+									text: "Daily Updates on Quantity " +
 										sPlantHeader +
 										" | Material Group: " +
-										sGroupDesc + " (" + sGroup + ")"
+										sGroupDesc +
+										" (" +
+										sGroup +
+										")"
 								}),
 								new ToolbarSpacer(),
 								new Button({
@@ -462,6 +591,25 @@ sap.ui.define([
 								})
 							]
 						}),
+
+						new sap.m.Toolbar({
+							content: [
+								new sap.m.Label({
+									text: "Total Actual Quantity (MT) : ",
+									design: "Bold"
+								}).addStyleClass("sapUiTinyMarginEnd kpiLabel"),
+
+								new sap.m.ObjectNumber({
+									number: "{kpiModel>/totalActualQty}", // data binding
+									emphasized: true,
+									state: "Success"
+								}).addStyleClass("kpiNumber"),
+
+								new ToolbarSpacer()
+							]
+						}),
+
+						// --- Chart/Table Container ---
 						oContainer
 					]
 				});
