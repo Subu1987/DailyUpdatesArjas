@@ -92,6 +92,7 @@
 				</Annotation>
 				<Annotation Term="UI.SelectionFields">
 					<Collection>
+						<PropertyPath>comp_code</PropertyPath>
 						<PropertyPath>CALMONTH</PropertyPath>
 						<PropertyPath>CALDAY</PropertyPath>
 						<PropertyPath>plant</PropertyPath>

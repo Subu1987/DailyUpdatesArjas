@@ -645,10 +645,25 @@ sap.ui.define([
 					}));
 				}
 
+				if (oInfo.companyCodes && oInfo.companyCodes.length) {
+					var ccFilters = [];
+
+					oInfo.companyCodes.forEach(function(cc) {
+						ccFilters.push(new Filter("comp_code", FilterOperator.EQ, cc));
+					});
+
+					aFilters.push(
+						new Filter({
+							filters: ccFilters,
+							and: false // comp_code EQ 1000 OR comp_code EQ 2000
+						})
+					);
+				}
+
 				that._oModel.read("/Zsales_Daily_Update", {
 					filters: aFilters,
 					urlParameters: {
-						$select: "CALDAY,INV_QTY,plant,matl_group",
+						$select: "CALDAY,INV_QTY,plant,matl_group,comp_code",
 						$orderby: "CALDAY"
 					},
 					success: function(oData) {
@@ -705,6 +720,8 @@ sap.ui.define([
 			var aFilters = [];
 			var aPlants = [];
 
+			var aCompCodeFilters = [];
+
 			var bUseDay =
 				oData.CALDAY &&
 				oData.CALDAY.ranges &&
@@ -735,6 +752,25 @@ sap.ui.define([
 					if (val) {
 						aPlants.push(val);
 					}
+				}
+			}
+
+			if (oData.comp_code &&
+				oData.comp_code.ranges &&
+				oData.comp_code.ranges.length > 0) {
+
+				oData.comp_code.ranges.forEach(function(range) {
+					if (range.value1) {
+						// Create individual filter for each company code
+						aCompCodeFilters.push(
+							new Filter("comp_code", FilterOperator.EQ, range.value1)
+						);
+					}
+				});
+
+				// Add OR filter group into main filters
+				if (aCompCodeFilters.length > 0) {
+					aFilters.push(new Filter(aCompCodeFilters, true));
 				}
 			}
 
