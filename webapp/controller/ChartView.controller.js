@@ -37,26 +37,51 @@ sap.ui.define([
 			this._oIconTabBar = this.byId("iconTabBar");
 			this._aAllMaterialGroups = [];
 
+			this._bInboundHandled = false;
+
+			// var that = this;
+			// BusyIndicator.show(0);
+
+			// this._oModel.metadataLoaded().then(function() {
+			// 	that._oSmartFilterBar.attachInitialized(function() {
+
+			// 		var oNow = new Date();
+			// 		var sDefaultMonth =
+			// 			oNow.getFullYear().toString() +
+			// 			("0" + (oNow.getMonth() + 1)).slice(-2);
+
+			// 		that._oSmartFilterBar.setFilterData({
+			// 			CALMONTH: {
+			// 				ranges: [{
+			// 					operation: "EQ",
+			// 					value1: sDefaultMonth
+			// 				}]
+			// 			}
+			// 		});
+
+			// 		that.onSearch();
+			// 		BusyIndicator.hide();
+			// 	});
+			// });
+
+			// ==============================
+			// READ INBOUND NAVIGATION PARAMS
+			// ==============================
+			var oComponentData = this.getOwnerComponent().getComponentData();
+			this._oStartupParams = oComponentData && oComponentData.startupParameters ? oComponentData.startupParameters : null;
+
+			this._sInboundMaterialGroup = null;
+
 			var that = this;
 			BusyIndicator.show(0);
 
 			this._oModel.metadataLoaded().then(function() {
 				that._oSmartFilterBar.attachInitialized(function() {
 
-					var oNow = new Date();
-					var sDefaultMonth =
-						oNow.getFullYear().toString() +
-						("0" + (oNow.getMonth() + 1)).slice(-2);
+					// 🔴 APPLY MONTH (navigation OR default)
+					that._applyInboundFiltersIfAny();
 
-					that._oSmartFilterBar.setFilterData({
-						CALMONTH: {
-							ranges: [{
-								operation: "EQ",
-								value1: sDefaultMonth
-							}]
-						}
-					});
-
+					// 🔴 Continue normal flow
 					that.onSearch();
 					BusyIndicator.hide();
 				});
@@ -68,11 +93,58 @@ sap.ui.define([
 			});
 			this.getView().setModel(this._oKpiModel, "kpiModel");
 		},
+		_applyInboundFiltersIfAny: function() {
+
+			var oFilterData = {};
+
+			if (this._oStartupParams &&
+				this._oStartupParams.CALMONTH &&
+				this._oStartupParams.CALMONTH.length) {
+
+				oFilterData.CALMONTH = {
+					ranges: [{
+						operation: "EQ",
+						value1: this._oStartupParams.CALMONTH[0]
+					}]
+				};
+
+				this._bInboundHandled = true;
+
+			} else {
+				var oNow = new Date();
+				var sDefaultMonth =
+					oNow.getFullYear().toString() +
+					("0" + (oNow.getMonth() + 1)).slice(-2);
+
+				oFilterData.CALMONTH = {
+					ranges: [{
+						operation: "EQ",
+						value1: sDefaultMonth
+					}]
+				};
+			}
+
+			this._oSmartFilterBar.setFilterData(oFilterData);
+
+			if (this._oStartupParams &&
+				this._oStartupParams.matl_group &&
+				this._oStartupParams.matl_group.length) {
+
+				this._sInboundMaterialGroup = this._oStartupParams.matl_group[0];
+			}
+		},
 
 		//------------------------------------------------------
 		// SEARCH GO BUTTON
 		//------------------------------------------------------
 		onSearch: function() {
+
+			// 🔒 Ignore duplicate search caused by inbound setFilterData
+			if (this._bInboundHandled) {
+				this._bInboundHandled = false;
+				return;
+			}
+
 			this._bWarningShown = false; // ← reset so next warning can show
 			var oSFB = this._oSmartFilterBar;
 			var oData = oSFB.getFilterData();
@@ -95,29 +167,7 @@ sap.ui.define([
 			this._loadMaterialGroupsAndTabs();
 
 			var that = this;
-			setTimeout(function() {
-				var oIconTabBar = that._oIconTabBar;
-				var aItems = oIconTabBar.getItems();
-				var sKey = oIconTabBar.getSelectedKey();
-				var oSelectedTab = null;
-
-				if (sKey) {
-					for (var i = 0; i < aItems.length; i++) {
-						if (aItems[i].getKey() === sKey) {
-							oSelectedTab = aItems[i];
-							break;
-						}
-					}
-				}
-
-				if (!oSelectedTab) {
-					oSelectedTab = aItems[0];
-				}
-
-				if (oSelectedTab) {
-					that._createChartForGroup(oSelectedTab.getKey(), oSelectedTab);
-				}
-			}, 200);
+			
 		},
 
 		//------------------------------------------------------
@@ -241,14 +291,46 @@ sap.ui.define([
 					// var oFirstTab = that._oIconTabBar.getItems()[0];
 					// that._createChartForGroup(sFirst, oFirstTab);
 
-					var sFirst = aAllowedGroups[0];
-					var oFirstTab = that._oIconTabBar.getItems()[0];
+					// var sFirst = aAllowedGroups[0];
+					// var oFirstTab = that._oIconTabBar.getItems()[0];
 
-					// FIX: force UI5 to treat first tab as selected
-					that._oIconTabBar.setSelectedKey(sFirst);
+					// // FIX: force UI5 to treat first tab as selected
+					// that._oIconTabBar.setSelectedKey(sFirst);
 
-					// FIX: now load the correct content
-					that._createChartForGroup(sFirst, oFirstTab);
+					// // FIX: now load the correct content
+					// that._createChartForGroup(sFirst, oFirstTab);
+
+					
+					// ==============================
+					// ✅ SINGLE SOURCE OF TRUTH
+					// ==============================
+					var sTargetGroup;
+
+					// Navigation case
+					if (that._sInboundMaterialGroup &&
+						aAllowedGroups.indexOf(that._sInboundMaterialGroup) !== -1) {
+
+						sTargetGroup = that._sInboundMaterialGroup;
+
+					} else {
+						// Normal launch
+						sTargetGroup = aAllowedGroups[0];
+					}
+
+					// Force selection AFTER items exist
+					that._oIconTabBar.setSelectedKey(sTargetGroup);
+
+					// Find tab and load chart
+					var aItems = that._oIconTabBar.getItems();
+					for (var i = 0; i < aItems.length; i++) {
+						if (aItems[i].getKey() === sTargetGroup) {
+							that._createChartForGroup(sTargetGroup, aItems[i]);
+							break;
+						}
+					}
+
+					// 🔒 Clear inbound navigation AFTER use
+					that._sInboundMaterialGroup = null;
 
 					BusyIndicator.hide();
 				},
