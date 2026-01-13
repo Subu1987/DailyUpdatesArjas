@@ -93,10 +93,54 @@ sap.ui.define([
 			});
 			this.getView().setModel(this._oKpiModel, "kpiModel");
 		},
+		// _applyInboundFiltersIfAny: function() {
+
+		// 	var oFilterData = {};
+
+		// 	if (this._oStartupParams &&
+		// 		this._oStartupParams.CALMONTH &&
+		// 		this._oStartupParams.CALMONTH.length) {
+
+		// 		oFilterData.CALMONTH = {
+		// 			ranges: [{
+		// 				operation: "EQ",
+		// 				value1: this._oStartupParams.CALMONTH[0]
+		// 			}]
+		// 		};
+
+		// 		this._bInboundHandled = true;
+
+		// 	} else {
+		// 		var oNow = new Date();
+		// 		var sDefaultMonth =
+		// 			oNow.getFullYear().toString() +
+		// 			("0" + (oNow.getMonth() + 1)).slice(-2);
+
+		// 		oFilterData.CALMONTH = {
+		// 			ranges: [{
+		// 				operation: "EQ",
+		// 				value1: sDefaultMonth
+		// 			}]
+		// 		};
+		// 	}
+
+		// 	this._oSmartFilterBar.setFilterData(oFilterData);
+
+		// 	if (this._oStartupParams &&
+		// 		this._oStartupParams.matl_group &&
+		// 		this._oStartupParams.matl_group.length) {
+
+		// 		this._sInboundMaterialGroup = this._oStartupParams.matl_group[0];
+		// 	}
+		// },
 		_applyInboundFiltersIfAny: function() {
 
 			var oFilterData = {};
+			var bHasInbound = false;
 
+			// =====================
+			// MONTH from navigation
+			// =====================
 			if (this._oStartupParams &&
 				this._oStartupParams.CALMONTH &&
 				this._oStartupParams.CALMONTH.length) {
@@ -108,9 +152,32 @@ sap.ui.define([
 					}]
 				};
 
-				this._bInboundHandled = true;
+				bHasInbound = true;
+			}
 
-			} else {
+			// =====================
+			// COMPANY CODE from navigation
+			// =====================
+			if (this._oStartupParams &&
+				this._oStartupParams.comp_code &&
+				this._oStartupParams.comp_code.length) {
+
+				oFilterData.comp_code = {
+					ranges: this._oStartupParams.comp_code.map(function(cc) {
+						return {
+							operation: "EQ",
+							value1: cc
+						};
+					})
+				};
+
+				bHasInbound = true;
+			}
+
+			// =====================
+			// DEFAULT MONTH (ONLY normal launch)
+			// =====================
+			if (!bHasInbound) {
 				var oNow = new Date();
 				var sDefaultMonth =
 					oNow.getFullYear().toString() +
@@ -124,14 +191,23 @@ sap.ui.define([
 				};
 			}
 
+			// Apply filters
 			this._oSmartFilterBar.setFilterData(oFilterData);
 
+			// =====================
+			// Material group (navigation only)
+			// =====================
 			if (this._oStartupParams &&
 				this._oStartupParams.matl_group &&
 				this._oStartupParams.matl_group.length) {
 
 				this._sInboundMaterialGroup = this._oStartupParams.matl_group[0];
+				bHasInbound = true;
 			}
+
+			// 🔑 CRITICAL FIX
+			// Set flag ONLY if navigation existed
+			this._bInboundHandled = bHasInbound;
 		},
 
 		//------------------------------------------------------
@@ -167,7 +243,7 @@ sap.ui.define([
 			this._loadMaterialGroupsAndTabs();
 
 			var that = this;
-			
+
 		},
 
 		//------------------------------------------------------
@@ -300,7 +376,6 @@ sap.ui.define([
 					// // FIX: now load the correct content
 					// that._createChartForGroup(sFirst, oFirstTab);
 
-					
 					// ==============================
 					// ✅ SINGLE SOURCE OF TRUTH
 					// ==============================
